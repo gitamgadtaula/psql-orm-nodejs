@@ -16,7 +16,7 @@ yarn migrate
 yarn start
 ```
 
-visit `localhost:5000` to run the mapper which populates the `User' table
+visit `localhost:5000` to run the mapper which populates the `User` table
 
-visit `localhost:5000/project` to run the mapper which populates the `Project' table
+visit `localhost:5000/project` to run the mapper which populates the `Project` table
 
