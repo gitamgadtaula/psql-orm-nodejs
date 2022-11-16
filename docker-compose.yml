@@ -14,33 +14,33 @@ services:
     tty: true
     ports:
       - '54001:5432'
-  web:
-    container_name: web_application
-    build:
-      context: .
-    env_file: ./.env
-    depends_on:
-      - db
-    volumes:
-      - .:/app/
-      - /app/node_modules
-    ports:
-      - '5000:5000'
-      - 127.0.0.1:9223:9223
-    environment:
-      - DB_HOST=db_application
-    command: npm start
-  migration:
-    build:
-      context: .
-    command:
-      ['./wait-for-it/wait-for-it.sh', 'db:5432', '--', 'npm', 'run', 'migrate']
-    links:
-      - db
-    depends_on:
-      - db
-    env_file: ./.env
-    environment:
-      - DB_HOST=db_application
+  # web:
+  #   container_name: web_application
+  #   build:
+  #     context: .
+  #   env_file: ./.env
+  #   depends_on:
+  #     - db
+  #   volumes:
+  #     - .:/app/
+  #     - /app/node_modules
+  #   ports:
+  #     - '5000:5000'
+  #     - 127.0.0.1:9223:9223
+  #   environment:
+  #     - DB_HOST=db_application
+  #   command: npm start
+  # migration:
+  #   build:
+  #     context: .
+  #   command:
+  #     ['./wait-for-it/wait-for-it.sh', 'db:5432', '--', 'npm', 'run', 'migrate']
+  #   links:
+  #     - db
+  #   depends_on:
+  #     - db
+  #   env_file: ./.env
+  #   environment:
+  #     - DB_HOST=db_application
 volumes:
   pg_data: null

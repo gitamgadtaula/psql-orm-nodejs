@@ -1,4 +1,4 @@
-const pool = require("../config/db");
+const pool = require("../config");
 
 class DatabaseOperations {
   constructor(table) {
@@ -6,44 +6,51 @@ class DatabaseOperations {
   }
 
   async includeBuilder(input, option) {
-    const { table, pivot, pk, fk, fk_pivot, key, select = [] } = option
-    const promiser = []
+    const { table, pivot, pk, fk, fk_pivot, key, select = [] } = option;
+    const promiser = [];
     for (let i = 0; i < input.length; i++) {
       const item = input[i];
-      const query = QueryBuilder.build.innerJoin(table, pivot, pk, fk, fk_pivot, item[key], select)
-      promiser.push(pool.query(query))
+      const query = QueryBuilder.build.innerJoin(
+        table,
+        pivot,
+        pk,
+        fk,
+        fk_pivot,
+        item[key],
+        select
+      );
+      promiser.push(pool.query(query));
     }
-    return Promise.all(promiser)
-
+    return Promise.all(promiser);
   }
 
   async include(options, data) {
     const db = this;
-    const response = await db.get(data)
+    const response = await db.get(data);
 
     // return if no record
-    if(!response.length) return []
-    
+    if (!response.length) return [];
+
     const promisers = options.map(function (option) {
-      return db.includeBuilder(response, option)
-    })
-    const outputs = await Promise.all(promisers)
-    const newResponse = []
+      return db.includeBuilder(response, option);
+    });
+    const outputs = await Promise.all(promisers);
+    const newResponse = [];
     for (let i = 0; i < response.length; i++) {
       const item = response[i];
-      const join = {}
+      const join = {};
       for (let j = 0; j < outputs.length; j++) {
         const output = outputs[j];
         const option = options[j];
-        join[option.table] = output[i].rows
+        join[option.table] = output[i].rows;
       }
       newResponse.push({
         ...item,
-        ...join
-      })
+        ...join,
+      });
     }
-    if(data.top) return newResponse[0]
-    return newResponse
+    if (data.top) return newResponse[0];
+    return newResponse;
   }
 
   get(data = {}) {
@@ -51,7 +58,7 @@ class DatabaseOperations {
     return new Promise((resolve, reject) => {
       pool.query(sql, function (err, data) {
         if (err) {
-          reject(err)
+          reject(err);
         } else {
           resolve(data.rows);
         }
@@ -64,7 +71,7 @@ class DatabaseOperations {
     return new Promise((resolve, reject) => {
       pool.query(sql, Object.values(data), (err, data) => {
         if (err) {
-          reject(err)
+          reject(err);
         } else {
           resolve(data.rows);
         }
@@ -77,7 +84,7 @@ class DatabaseOperations {
     return new Promise((resolve, reject) => {
       pool.query(sql, Object.values(data), (err, data) => {
         if (err) {
-          reject(err)
+          reject(err);
         } else {
           resolve(data.rows);
         }
@@ -99,45 +106,56 @@ class DatabaseOperations {
 const QueryBuilder = {
   build: {
     save: (name, data) => {
-      const vIterator = Object.keys(data).map((i, idx) => `$${idx + 1}`).join(',')
-      const keys = Object.keys(data).join(',')
-      return `INSERT INTO ${name} (${keys}) VALUES (${vIterator})`
+      const vIterator = Object.keys(data)
+        .map((i, idx) => `$${idx + 1}`)
+        .join(",");
+      const keys = Object.keys(data).join(",");
+      return `INSERT INTO ${name} (${keys}) VALUES (${vIterator})`;
     },
     filter: (name, { columns, where }) => {
-      let conditions = '';
+      let conditions = "";
 
       // If there is a condition object build query using keys and values
       if (where) {
         const conditionKeys = Object.keys(where);
-        const conditionValues = Object.values(where).map((value) => (typeof value === 'string' ? `'${value}'` : value));
+        const conditionValues = Object.values(where).map((value) =>
+          typeof value === "string" ? `'${value}'` : value
+        );
         conditionKeys.forEach((key, index) => {
-          conditions += `${key} = ${conditionValues[index]}${index === conditionKeys.length - 1 ? '' : ' AND '}`;
+          conditions += `${key} = ${conditionValues[index]}${
+            index === conditionKeys.length - 1 ? "" : " AND "
+          }`;
         });
       }
 
-      let query = `SELECT ${columns ? columns.join() : '*'} FROM ${name}`;
+      let query = `SELECT ${columns ? columns.join() : "*"} FROM ${name}`;
       if (conditions) query += ` WHERE ${conditions}`;
       return query;
     },
     innerJoin: (name, pivot, pk, fk, fk_pivot, id, select = []) => {
-
-      const selection = select.length ? select.map(s => `s.${s}`).join(',') : '*'
+      const selection = select.length
+        ? select.map((s) => `s.${s}`).join(",")
+        : "*";
 
       return `SELECT ${selection}
       FROM ${pivot} sc 
       INNER JOIN ${name} s ON s.${fk} = sc.${fk_pivot}
-      WHERE sc.${pk} = ${id}`
+      WHERE sc.${pk} = ${id}`;
     },
     update: (name, data, where) => {
-      let conditions = '';
-      let updater = '';
+      let conditions = "";
+      let updater = "";
 
       // If there is a condition object build query using keys and values
       if (where) {
         const conditionKeys = Object.keys(where);
-        const conditionValues = Object.values(where).map((value) => (typeof value === 'string' ? `'${value}'` : value));
+        const conditionValues = Object.values(where).map((value) =>
+          typeof value === "string" ? `'${value}'` : value
+        );
         conditionKeys.forEach((key, index) => {
-          conditions += `${key} = ${conditionValues[index]}${index === conditionKeys.length - 1 ? '' : ' AND '}`;
+          conditions += `${key} = ${conditionValues[index]}${
+            index === conditionKeys.length - 1 ? "" : " AND "
+          }`;
         });
       }
       if (data) {
@@ -149,10 +167,10 @@ const QueryBuilder = {
       let query = `UPDATE ${name} SET ${updater} `;
       if (conditions) query += ` WHERE ${conditions}`;
       return query;
-    }
-  }
-}
+    },
+  },
+};
 module.exports = {
   DatabaseOperations,
-  QueryBuilder
-}
+  QueryBuilder,
+};
